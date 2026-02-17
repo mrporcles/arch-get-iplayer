@@ -3,10 +3,10 @@ LABEL org.opencontainers.image.authors = "binhex"
 LABEL org.opencontainers.image.source = "https://github.com/binhex/arch-get-iplayer"
 
 # release tag name from buildx arg
-ARG RELEASETAG
+ARG RELEASETAG="1.0"
 
 # arch from buildx --platform, e.g. amd64
-ARG TARGETARCH
+ARG TARGETARCH="amd64"
 
 # additional files
 ##################
