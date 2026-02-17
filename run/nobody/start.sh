@@ -1,12 +1,11 @@
 #!/usr/bin/dumb-init /bin/bash
-# Script to download tv shows from BBC iPlayer
+# Script to download episodes from BBC iPlayer
 
 function download() {
 
 	shows="${1}"
-	show_type="${2}"
 
-	echo "[info] TV show Name/PID defined as '${shows}'"
+	echo "[info] Show Name defined as '${shows}'"
 
 	# split comma separated string into list from SHOW env variable
 	IFS=',' read -ra showlist <<< "${shows}"
@@ -23,12 +22,7 @@ function download() {
 		find /data/get_iplayer/incomplete/ -type f -name "*partial*" -delete
 
 		# if show_type is name then set pid_command to show name, else use pid (show name as pid)
-		if [[ "${show_type}" == "name" ]]; then
-			/usr/bin/get_iplayer --profile-dir /config --atomicparsley /usr/sbin/atomicparsley --get --tv-quality="fhd,hd,sd,web,mobile" --file-prefix="${show} - <senum> - <episodeshort>" "${show}" --output "/data/get_iplayer/incomplete/${show}"
-		else
-			/usr/bin/get_iplayer --profile-dir /config --atomicparsley /usr/sbin/atomicparsley --get --tv-quality="fhd,hd,sd,web,mobile" --file-prefix="${show} - <senum> - <episodeshort>" --pid="${show}" --pid-recursive --output "/data/get_iplayer/incomplete/${show}"
-		fi
-
+		/usr/bin/get_iplayer --type=radio --profile-dir /config --atomicparsley /usr/sbin/atomicparsley --get "${show}" --output "/data/get_iplayer/incomplete/${show}" --command-radio='ffmpeg -i "<filename>" -c:v copy -c:a libmp3lame -b:a 320k -y "/data/get_iplayer/incomplete/${show}/<fileprefix>.mp3" && rm "<filename>"'
 	done
 
 }
@@ -36,7 +30,7 @@ function download() {
 function move() {
 
 	# check incomplete folder DOES contain files with mp4 extension
-	if [[ -n $(find /data/get_iplayer/incomplete/ -name '*.mp4') ]]; then
+	if [[ -n $(find /data/get_iplayer/incomplete/ -name '*.mp3') ]]; then
 
 		echo "[info] Copying show folders in incomplete to completed..."
 		cp -rf "/data/get_iplayer/incomplete"/* "/data/completed/"
@@ -74,10 +68,6 @@ function start() {
 			download "${SHOWS}" "name"
 		fi
 
-		if [[ -n "${SHOWS_PID}" ]]; then
-			download "${SHOWS_PID}" "pid"
-		fi
-
 		# run function to move downloaded tv shows
 		move
 
@@ -99,9 +89,9 @@ function start() {
 }
 
 # if 'SHOWS' env var not defined then exit
-if [ -z "${SHOWS}" ] && [ -z "${SHOWS_PID}" ]; then
+if [ -z "${SHOWS}" ]; then
 
-	echo "[crit] TV Show Name and/or PID is not defined, please specify show name to download using the environment variable 'SHOWS' and/or specify the show pid using 'SHOWS_PID'"
+	echo "[crit] Show Name is not defined, please specify show name to download using the environment variable 'SHOWS'"
 
 fi
 
